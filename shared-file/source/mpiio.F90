@@ -1,13 +1,15 @@
 module mpiio
 
+#ifdef WITH_MPIIO
+
   use mpi
   implicit none
-
-  integer, parameter :: ndim = 3
 
 contains
 
 subroutine mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
+
+  integer, parameter :: ndim = 3
 
   character*(*) :: filename
   
@@ -113,6 +115,19 @@ subroutine mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
 
 end subroutine mpiiowrite
 
+! WITH_MPIIO not defined. Dummy subroutine.
+#else
+
+contains
+subroutine mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
+  character*(*) :: filename
+  integer :: n1, n2, n3, cartcomm
+  double precision, dimension(0:n1+1,0:n2+1,0:n3+1) :: iodata
+end subroutine mpiiowrite
+
+#endif
+
+! Serial write is unconditionally compiled
 subroutine serialwrite(filename, iodata, n1, n2, n3, cartcomm)
 
   character*(*) :: filename

@@ -1,18 +1,19 @@
 program benchio
 
   use benchclock
+  use mpi
   use mpiio
   use iohdf5
   use ionetcdf
 
   implicit none
 
-  integer, parameter :: iolayerstart = 2
-  integer, parameter :: iolayerend = 2
+  integer, parameter :: iolayerstart = 1
+  integer, parameter :: iolayerend = 4
   integer, parameter :: numiolayer = 4
   integer, parameter :: numstriping = 3
   integer, parameter :: maxlen = 64
-  integer, parameter :: numrep = 10
+  integer, parameter :: numrep = 3
 
   character*(maxlen), dimension(numiolayer)  :: iostring, iolayername
   character*(maxlen), dimension(numstriping) :: stripestring
@@ -27,6 +28,7 @@ program benchio
   integer, parameter :: n1 = 256
   integer, parameter :: n2 = 256
   integer, parameter :: n3 = 256
+  integer, parameter :: ndim = 3
 
   integer :: i1, i2, i3, j1, j2, j3, l1, l2, l3, p1, p2, p3
 
@@ -132,6 +134,24 @@ program benchio
 
   do iolayer = iolayerstart, iolayerend
 
+!  Skip layer if support is not compiled in
+!  Expects iolayers in order: serial, MPI-IO, HDF5, NetCDF
+#ifndef WITH_MPIIO
+     if (iolayer == 2) then
+       cycle
+     endif
+#endif
+#ifndef WITH_HDF5
+     if (iolayer == 3) then
+       cycle
+     endif
+#endif
+#ifndef WITH_NETCDF
+     if (iolayer == 4) then
+       cycle
+     endif
+#endif
+
      if (rank == 0) then
         write(*,*)
         write(*,*) '------'
@@ -140,7 +160,7 @@ program benchio
         write(*,*)
      end if
 
-     do istriping = 2, numstriping
+     do istriping = 1, numstriping
 
         filename = trim(stripestring(istriping))//'/'//trim(iolayername(iolayer))
 
@@ -167,10 +187,10 @@ program benchio
              call mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
 
           case(3)
-          !   call hdf5write(filename, iodata, n1, n2, n3, cartcomm)
+             call hdf5write(filename, iodata, n1, n2, n3, cartcomm)
 
           case(4)
-          !   call netcdfwrite(filename, iodata, n1, n2, n3, cartcomm)
+             call netcdfwrite(filename, iodata, n1, n2, n3, cartcomm)
 
           case default
              write(*,*) 'Illegal value of iolayer = ', iolayer

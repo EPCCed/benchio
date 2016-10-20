@@ -6,26 +6,37 @@ CC=     cc
 #
 #
 FFLAGS= -g
+
+# Comment out a line below to disable the named tests
+FFLAGS+= -DWITH_MPIIO
+FFLAGS+= -DWITH_HDF5
+FFLAGS+= -DWITH_NETCDF
+
 CFLAGS= $(FFLAGS)
 LFLAGS=
 #
 EXE=	benchio.x
 #
 FSRC= \
-	mpiio.f90      \
-	netcdf.f90      \
-	hdf5.f90      \
+	mpiio.F90      \
+	netcdf.F90      \
+	hdf5.F90      \
 	benchclock.f90 \
-	benchio.f90
+	benchio.F90
 
 CSRC=
 
 # .SUFFIXES:
-.SUFFIXES: .f90 .c .o
+.SUFFIXES: .F90 .f90 .c .o
 
-OBJ=    $(FSRC:.f90=.o) $(CSRC:.c=.o)
+FOBJ=	$(FSRC:.F90=.o)
+OBJ=    $(FOBJ:.f90=.o) $(CSRC:.c=.o)
 
-MOD=    $(FSRC:.f90=.mod)
+FMOD=	$(FSRC:.F90=.mod)
+MOD=    $(FMOD:.f90=.mod)
+
+.F90.o:
+	$(FC) $(FFLAGS) -c $<
 
 .f90.o:
 	$(FC) $(FFLAGS) -c $<

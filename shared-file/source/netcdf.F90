@@ -1,5 +1,7 @@
 module ionetcdf
 
+#ifdef WITH_NETCDF
+
   use netcdf
   use mpi
   
@@ -92,6 +94,17 @@ subroutine check(status)
     stop
   end if
 end subroutine check  
- 
+
+! WITH_NETCDF not defined. Dummy subroutine.
+#else
+
+contains
+subroutine netcdfwrite(filename, iodata, n1, n2, n3, cartcomm)
+  character*(*) :: filename
+  integer :: n1, n2, n3, cartcomm
+  double precision, dimension(0:n1+1,0:n2+1,0:n3+1) :: iodata
+end subroutine netcdfwrite
+
+#endif
 
 end module ionetcdf

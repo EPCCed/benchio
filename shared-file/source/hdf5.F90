@@ -1,5 +1,7 @@
 module iohdf5
 
+#ifdef WITH_HDF5
+
   use hdf5
   use mpi
   
@@ -125,5 +127,17 @@ subroutine hdf5write(filename, iodata, n1, n2, n3, cartcomm)
   CALL h5close_f(ierr)
 
 end subroutine hdf5write
+
+! WITH_HDF5 not defined. Dummy subroutine.
+#else
+
+contains
+subroutine hdf5write(filename, iodata, n1, n2, n3, cartcomm)
+  character*(*) :: filename
+  integer :: n1, n2, n3, cartcomm
+  double precision, dimension(0:n1+1,0:n2+1,0:n3+1) :: iodata
+end subroutine hdf5write
+
+#endif
 
 end module iohdf5
