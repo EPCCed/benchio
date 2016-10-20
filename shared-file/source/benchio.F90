@@ -13,7 +13,7 @@ program benchio
   integer, parameter :: numiolayer = 4
   integer, parameter :: numstriping = 3
   integer, parameter :: maxlen = 64
-  integer, parameter :: numrep = 3
+  integer, parameter :: numrep = 10
 
   character*(maxlen), dimension(numiolayer)  :: iostring, iolayername
   character*(maxlen), dimension(numstriping) :: stripestring
