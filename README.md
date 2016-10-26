@@ -22,9 +22,13 @@ Supports MPI-IO, HDF5 and NetCDF backends.
 Tested under all three programming environments on ARCHER: Cray, GNU, and Intel.
 
 For an ARCHER build:
+
 `module load cray-netcdf-hdf5parallel/4.4.0`
+
 `module load cray-hdf5-parallel/1.8.16`  
+
 `make clean`
+
 `make`
 
 For other platforms, edit the `Makefile` to point variables `FC` and `CC` to
@@ -42,10 +46,15 @@ Disabling all backends will result in a serial (POSIX) I/O benchmark.
 # Running
 
 `mkdir -p defstriped`
+
 `mkdir -p striped`
+
 `mkdir -p unstriped`
+
 `lfs setstripe -c -1 striped`
+
 `lfs setstripe -c 1 unstriped`
+
 `aprun -n <NUMBER_OF_PROCESSORS> ./benchio.x`
 
 Explanation of commands follows:
