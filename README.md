@@ -15,7 +15,8 @@ level, the maximum supported stripe level, and single-stripe/unstriped I/O.
 Will run on non-Lustre filesystems (e.g. GPFS) but will not test any filesystem
 specific features.
 
-Supports MPI-IO, HDF5 and NetCDF backends.
+Supports MPI-IO, HDF5 and NetCDF backends. A run will test all backends included
+at compile time.
 
 # Compilation
 
@@ -69,4 +70,15 @@ The `benchio.x` executable should be launched with the platform job launcher,
 e.g. `aprun` or `mpirun`. Results are written to STDOUT.
 
 Complete sample run scripts are included in `source/run_scripts`.
+
+## Adjusting volume of data
+
+The array size (per MPI rank) is controlled through the following constants in
+`benchio.F90`:
+
+`integer, parameter :: n1 = 256`
+
+`integer, parameter :: n2 = 256`
+
+`integer, parameter :: n3 = 256`
 
