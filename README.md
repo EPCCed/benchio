@@ -15,8 +15,8 @@ level, the maximum supported stripe level, and single-stripe/unstriped I/O.
 Will run on non-Lustre filesystems (e.g. GPFS) but will not test any filesystem
 specific features.
 
-Supports MPI-IO, HDF5 and NetCDF backends. A run will test all backends included
-at compile time.
+Supports POSIX (serial), MPI-IO, HDF5 and NetCDF backends. A run will test all
+backends included at compile time.
 
 # Compilation
 
@@ -38,11 +38,10 @@ HDF5 and NetCDF libraries. Then `make clean && make`.
 
 ## Building with selected backends
 
-MPI-IO, HDF5 and NetCDF backends can be disabled by commenting out the relevant
-`FFLAGS` lines in the `Makefile`. e.g. Commenting out: `FFLAGS+= -DWITH_NETCDF`
-will build the application with only MPI-IO and HDF5 support.
-
-Disabling all backends will result in a serial (POSIX) I/O benchmark.
+POSIX (serial), MPI-IO, HDF5 and NetCDF backends can be disabled by commenting
+out the relevant `FFLAGS` lines in the `Makefile`. e.g. Commenting out:
+`FFLAGS+= -DWITH_NETCDF` will build the application with only MPI-IO and HDF5
+support.
 
 # Running
 

@@ -136,6 +136,11 @@ program benchio
 
 !  Skip layer if support is not compiled in
 !  Expects iolayers in order: serial, MPI-IO, HDF5, NetCDF
+#ifndef WITH_SERIAL
+     if (iolayer == 1) then
+       cycle
+     endif
+#endif
 #ifndef WITH_MPIIO
      if (iolayer == 2) then
        cycle
