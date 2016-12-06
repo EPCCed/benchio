@@ -25,11 +25,11 @@ subroutine multiwrite(filestem, iodata, n1, n2, n3, cartcomm)
 
   write(crank, "(I0.6)") rank
   filename = trim(filestem)//crank
-  open(file=filename, unit=iounit+rank, access='stream')
+  open(file=filename, unit=iounit, access='stream')
 
-  write(unit=iounit+rank) iodata(1:n1, 1:n2, 1:n3)
+  write(unit=iounit) iodata(1:n1, 1:n2, 1:n3)
 
-  close(iounit+rank)
+  close(iounit)
 
 end subroutine multiwrite
 
@@ -49,8 +49,8 @@ subroutine multidelete(filestem, cartcomm)
 
   write(crank, "(I0.6)") rank
   filename = trim(filestem)//crank
-  open(unit=iounit+rank, iostat=stat, file=filename, status='old')
-  if (stat.eq.0) close(unit=iounit+rank, status='delete')
+  open(unit=iounit, iostat=stat, file=filename, status='old')
+  if (stat.eq.0) close(unit=iounit, status='delete')
 
 end subroutine multidelete
 

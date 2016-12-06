@@ -1,8 +1,8 @@
 MF=     Makefile
 
 # Compilers
-FC=     mpif90
-CC=     mpicc
+FC=     ftn
+CC=     cc
 #
 #
 FFLAGS= -g
