@@ -12,12 +12,12 @@ FFLAGS= -g
 CFLAGS= $(FFLAGS)
 LFLAGS=
 #
-EXE=	benchio.x
+EXE=	benchio_fpp.x
 #
 FSRC= \
 	multifile.F90      \
 	benchclock.f90 \
-	benchio.F90
+	benchio_fpp.F90
 
 CSRC=
 

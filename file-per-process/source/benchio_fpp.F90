@@ -23,9 +23,11 @@ program benchio
 ! Set local array size - global sizes l1, l2 and l3 are scaled
 ! by number of processes in each dimension
 
-  integer, parameter :: n1 = 128
-  integer, parameter :: n2 = 128
-  integer, parameter :: n3 = 128
+! Due to Fortran IO agressive buffering you need to
+! make sure that this size is larger than file cache
+  integer, parameter :: n1 = 512
+  integer, parameter :: n2 = 512
+  integer, parameter :: n3 = 512
   integer, parameter :: ndim = 3
 
   integer :: i1, i2, i3, j1, j2, j3, l1, l2, l3, p1, p2, p3
