@@ -3,12 +3,14 @@ program benchio
   use benchclock
   use mpi
   use mpifile
+  use iohdf5
+  use ionetcdf
 
   implicit none
 
   integer, parameter :: iolayerstart = 1
-  integer, parameter :: iolayerend = 1
-  integer, parameter :: numiolayer = 1
+  integer, parameter :: iolayerend = 4
+  integer, parameter :: numiolayer = 4
   integer, parameter :: numstriping = 3
   integer, parameter :: maxlen = 64
   integer, parameter :: numrep = 10
@@ -47,8 +49,14 @@ program benchio
   double precision :: mintime, maxiorate, avgtime, avgiorate
 
   iostring(1) = 'File per process'
+  iostring(2) = 'MPI-IO'
+  iostring(3) = ' HDF5 '
+  iostring(4) = 'NetCDF'
 
   iolayername(1) = 'fpp'
+  iolayername(2) = 'fpp-mpiio'
+  iolayername(3) = 'fpp-hdf5'
+  iolayername(4) = 'fpp-netcdf'
 
   stripestring(1) = 'unstriped'
   stripestring(2) = 'striped'
@@ -128,6 +136,29 @@ program benchio
 
   do iolayer = iolayerstart, iolayerend
 
+!  Skip layer if support is not compiled in
+!  Expects iolayers in order: serial, MPI-IO, HDF5, NetCDF
+#ifndef WITH_SERIAL
+     if (iolayer == 1) then
+       cycle
+     endif
+#endif
+#ifndef WITH_MPIIO
+     if (iolayer == 2) then
+       cycle
+     endif
+#endif
+#ifndef WITH_HDF5
+     if (iolayer == 3) then
+       cycle
+     endif
+#endif
+#ifndef WITH_NETCDF
+     if (iolayer == 4) then
+       cycle
+     endif
+#endif
+
      if (rank == 0) then
         write(*,*)
         write(*,*) '------'
@@ -158,6 +189,15 @@ program benchio
 
           case(1)
              call multiwrite(filename, iodata, n1, n2, n3, cartcomm)
+
+          case(2)
+             call multiwrite(filename, iodata, n1, n2, n3, cartcomm)
+
+          case(3)
+             call hdf5write(filename, iodata, n1, n2, n3, cartcomm)
+
+          case(4)
+             call netcdfwrite(filename, iodata, n1, n2, n3, cartcomm)
 
           case default
              write(*,*) 'Illegal value of iolayer = ', iolayer

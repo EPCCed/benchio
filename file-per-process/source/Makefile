@@ -5,9 +5,13 @@ FC=     ftn
 CC=     cc
 #
 #
-FFLAGS= -g
+FFLAGS= -g 
 
 # Comment out a line below to disable the named tests
+#FFLAGS+= -DWITH_SERIAL
+#FFLAGS+= -DWITH_MPIIO
+FFLAGS+= -DWITH_HDF5
+FFLAGS+= -DWITH_NETCDF
 
 CFLAGS= $(FFLAGS)
 LFLAGS=
@@ -16,6 +20,8 @@ EXE=	benchio_fpp.x
 #
 FSRC= \
 	multifile.F90      \
+	hdf5.F90 \
+        netcdf.F90 \
 	benchclock.f90 \
 	benchio_fpp.F90
 
