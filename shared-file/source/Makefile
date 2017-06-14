@@ -8,9 +8,9 @@ CC=     cc
 FFLAGS= -g
 
 # Comment out a line below to disable the named tests
-FFLAGS+= -DWITH_SERIAL
-FFLAGS+= -DWITH_MPIIO
-FFLAGS+= -DWITH_HDF5
+#FFLAGS+= -DWITH_SERIAL
+#FFLAGS+= -DWITH_MPIIO
+#FFLAGS+= -DWITH_HDF5
 FFLAGS+= -DWITH_NETCDF
 
 CFLAGS= $(FFLAGS)

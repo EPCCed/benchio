@@ -87,6 +87,70 @@ subroutine netcdfwrite(filename, iodata, n1, n2, n3, cartcomm)
 
 end subroutine netcdfwrite
 
+subroutine netcdfread(filename, iodata, n1, n2, n3, cartcomm)
+  
+  !TODO: This is all boilerplate code copied from netcdfwrite. Move to a shared routine?
+  integer, parameter :: ndim = 3
+
+  character*(*) :: filename
+  
+  integer :: n1, n2, n3
+  double precision, dimension(0:n1+1,0:n2+1,0:n3+1) :: iodata
+
+  integer, dimension(ndim) :: arraysize, arraystart
+  integer, dimension(ndim) :: arraygsize, arraysubsize
+
+  integer :: cartcomm, ierr, rank, size
+
+  integer, dimension(ndim) :: dims, coords
+  logical, dimension(ndim) :: periods
+
+  integer :: ncid, varid, oldmode, dimids(ndim)
+  integer :: x_dimid, y_dimid, z_dimid
+
+  call MPI_Comm_size(cartcomm, size, ierr)
+  call MPI_Comm_rank(cartcomm, rank, ierr)
+
+  call MPI_Cart_get(cartcomm, ndim, dims, periods, coords, ierr)
+
+  arraysize(:) = [n1+2, n2+2, n3+2]
+
+! Subtract halos for array subsize
+
+  arraysubsize(:)   = [n1, n2, n3]
+
+!
+! Define filetype for this process, ie what portion of the global array
+! this process owns; starting positions use C-indexing (ie counting from 0).
+!
+
+  arraygsize(:) = arraysubsize(:) * dims(:)
+  arraystart(:) = arraysubsize(:) * coords(:) + 1   ! Use Fortran indexing
+  
+  ! Open the file. Flag nf90_nowrite to open read-only.
+  call check( nf90_open(filename, ior(nf90_nowrite,nf90_mpiio), ncid, &
+              comm = cartcomm, info = MPI_INFO_NULL) )
+
+  ! Get the varid of the data variable, based on its name.
+  call check( nf90_inq_varid(ncid, "data", varid) )
+       
+  ! Set collective access on this variable. This will cause all
+  ! reads/writes to happen together on every processor. Fairly
+  ! pointless, in this contexct, but I want to at least call this
+  ! function once in my testing.
+  call check( nf90_var_par_access(ncid, varid, nf90_collective) )
+
+  ! Read this processor's data.
+  call check( nf90_get_var(ncid, varid, iodata(1:n1, 1:n2, 1:n3), &
+              start = arraystart, count = arraysubsize) )
+  
+  ! TODO: Some sanity check on the data?
+  
+  ! Close the file.
+  call check( nf90_close(ncid) )  
+  
+end subroutine netcdfread
+
 subroutine check(status)
   integer, intent ( in) :: status
   if(status /= nf90_noerr) then 
@@ -95,7 +159,7 @@ subroutine check(status)
   end if
 end subroutine check  
 
-! WITH_NETCDF not defined. Dummy subroutine.
+! WITH_NETCDF not defined. Dummy subroutines.
 #else
 
 contains
@@ -104,6 +168,12 @@ subroutine netcdfwrite(filename, iodata, n1, n2, n3, cartcomm)
   integer :: n1, n2, n3, cartcomm
   double precision, dimension(0:n1+1,0:n2+1,0:n3+1) :: iodata
 end subroutine netcdfwrite
+
+subroutine netcdfread(filename, iodata, n1, n2, n3, cartcomm)
+  character*(*) :: filename
+  integer :: n1, n2, n3, cartcomm
+  double precision, dimension(0:n1+1,0:n2+1,0:n3+1) :: iodata
+end subroutine netcdfread
 
 #endif
 

@@ -13,7 +13,7 @@ program benchio
   integer, parameter :: numiolayer = 4
   integer, parameter :: numstriping = 3
   integer, parameter :: maxlen = 64
-  integer, parameter :: numrep = 10
+  integer, parameter :: numrep = 3
 
   character*(maxlen), dimension(numiolayer)  :: iostring, iolayername
   character*(maxlen), dimension(numstriping) :: stripestring
@@ -44,7 +44,8 @@ program benchio
   logical, dimension(ndim) :: periods = [.false., .false., .false.]
 
   double precision :: t0, t1, time, iorate, mibdata
-  double precision :: mintime, maxiorate, avgtime, avgiorate
+  double precision :: mintime_w, maxiorate_w, avgtime_w, avgiorate_w
+  double precision :: mintime_r, maxiorate_r, avgtime_r, avgiorate_r
 
   iostring(1) = 'Serial'
   iostring(2) = 'MPI-IO'
@@ -165,16 +166,24 @@ program benchio
         write(*,*)
      end if
 
-     do istriping = 1, numstriping
+     !do istriping = 1, numstriping
+     do istriping = 2, 2
 
         filename = trim(stripestring(istriping))//'/'//trim(iolayername(iolayer))
 
         if (rank == 0) then
            write(*,*) 'Writing to ', filename
-           mintime = 0
-           maxiorate = 0
-           avgtime = 0
-           avgiorate = 0
+           ! Write statistics
+           mintime_w = 0
+           maxiorate_w = 0
+           avgtime_w = 0
+           avgiorate_w = 0
+           
+           ! Read statistics
+           mintime_r = 0
+           maxiorate_r = 0
+           avgtime_r = 0
+           avgiorate_r = 0
         end if
 
         do irep = 1, numrep
@@ -183,6 +192,7 @@ program benchio
             t0 = benchtime()
           end if
 
+          ! Write test
           select case (iolayer)
 
           case(1)
@@ -209,21 +219,81 @@ program benchio
 
              time = t1 - t0
              iorate = mibdata/time
-             avgtime = avgtime + time/numrep
-             avgiorate = avgiorate + iorate/numrep
+             avgtime_w = avgtime_w + time/numrep
+             avgiorate_w = avgiorate_w + iorate/numrep
 
-             if (maxiorate < iorate) then
-               maxiorate = iorate
-               mintime = time
+             if (maxiorate_w < iorate) then
+               maxiorate_w = iorate
+               mintime_w = time
              end if
 
-             write(*,*) 'time = ', time, ', rate = ', iorate, ' MiB/s'
+             write(*,*) 'write time = ', time, ', rate = ', iorate, ' MiB/s'
+          end if
+          
+          ! Read test
+          
+          ! Reset data array to illegal values in preparation for values being read back in
+          ! Perform write of illegal values to clear I/O cache 
+          ! TODO: Extremely slow solution
+          iodata(:,:,:) = -1
+          call netcdfwrite('tmp.nc', iodata, n1, n2, n3, cartcomm)
+          call fdelete('tmp.nc')
+          
+          call MPI_Barrier(comm, ierr)
+          if (rank == 0) then
+            t0 = benchtime()
+          end if
+          ! TODO: Not really a valid test.
+          ! Currently just reads data back into array from file written above. 
+          select case (iolayer)
+
+          case(1)
+             call serialwrite(filename, iodata, n1, n2, n3, cartcomm)
+
+          case(2)
+             call mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
+
+          case(3)
+             call hdf5write(filename, iodata, n1, n2, n3, cartcomm)
+
+          case(4)
+             call netcdfread(filename, iodata, n1, n2, n3, cartcomm)
+
+          case default
+             write(*,*) 'Illegal value of iolayer = ', iolayer
+             stop
+
+          end select
+          
+          call MPI_Barrier(comm, ierr)
+          if (rank == 0) then
+             t1 = benchtime()
+
+             time = t1 - t0
+             iorate = mibdata/time
+             avgtime_r = avgtime_r + time/numrep
+             avgiorate_r = avgiorate_r + iorate/numrep
+
+             if (maxiorate_r < iorate) then
+               maxiorate_r = iorate
+               mintime_r = time
+             end if
+
+             write(*,*) 'read time = ', time, ', rate = ', iorate, ' MiB/s'
              call fdelete(filename)
           end if
+          
         end do
         if (rank == 0) then
-          write(*,*) 'mintime = ', mintime, ', maxrate = ', maxiorate, ' MiB/s'
-          write(*,*) 'avgtime = ', avgtime, ', avgrate = ', avgiorate, ' MiB/s'
+          write(*,*)
+          write(*,*) 'Write statistics:'
+          write(*,*) 'mintime = ', mintime_w, ', maxrate = ', maxiorate_w, ' MiB/s'
+          write(*,*) 'avgtime = ', avgtime_w, ', avgrate = ', avgiorate_w, ' MiB/s'
+          write(*,*)
+          write(*,*) 'Read statistics:'
+          write(*,*) 'mintime = ', mintime_r, ', maxrate = ', maxiorate_r, ' MiB/s'
+          write(*,*) 'avgtime = ', avgtime_r, ', avgrate = ', avgiorate_r, ' MiB/s'
+          write(*,*)
           write(*,*) 'Deleting: ', filename
           write(*,*)
         end if
