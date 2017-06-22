@@ -248,13 +248,13 @@ program benchio
           select case (iolayer)
 
           case(1)
-             call serialwrite(filename, iodata, n1, n2, n3, cartcomm)
+             call serialread(filename, iodata, n1, n2, n3, cartcomm)
 
           case(2)
-             call mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
+             call mpiioread(filename, iodata, n1, n2, n3, cartcomm)
 
           case(3)
-             call hdf5write(filename, iodata, n1, n2, n3, cartcomm)
+             call hdf5read(filename, iodata, n1, n2, n3, cartcomm)
 
           case(4)
              call netcdfread(filename, iodata, n1, n2, n3, cartcomm)
