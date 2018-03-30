@@ -8,19 +8,15 @@ program benchio
 
   implicit none
 
-  integer, parameter :: iolayerstart = 1
-  integer, parameter :: iolayerend = 4
   integer, parameter :: numiolayer = 4
-  integer, parameter :: numstriping = 3
   integer, parameter :: maxlen = 64
   integer, parameter :: numrep = 10
 
   character*(maxlen), dimension(numiolayer)  :: iostring, iolayername
-  character*(maxlen), dimension(numstriping) :: stripestring
 
-  character*(maxlen) :: filename
+  character*(maxlen) :: filedir, filename
 
-  integer :: iolayer, istriping, irep
+  integer :: iolayer, irep
 
 ! Set local array size - global sizes l1, l2 and l3 are scaled
 ! by number of processes in each dimension
@@ -56,9 +52,7 @@ program benchio
   iolayername(3) = 'hdf5.dat'
   iolayername(4) = 'netcdf.dat'
 
-  stripestring(1) = 'unstriped'
-  stripestring(2) = 'striped'
-  stripestring(3) = 'defstriped'
+  filedir = 'benchio_files'
 
   call MPI_Init(ierr)
 
@@ -132,7 +126,7 @@ program benchio
      end do
   end do
 
-  do iolayer = iolayerstart, iolayerend
+  do iolayer = 1, numiolayer
 
 !  Skip layer if support is not compiled in
 !  Expects iolayers in order: serial, MPI-IO, HDF5, NetCDF
@@ -165,69 +159,66 @@ program benchio
         write(*,*)
      end if
 
-     do istriping = 1, numstriping
+     filename = trim(filedir)//'/'//trim(iolayername(iolayer))
 
-        filename = trim(stripestring(istriping))//'/'//trim(iolayername(iolayer))
+     if (rank == 0) then
+        write(*,*) 'Writing to ', filename
+        mintime = 0
+        maxiorate = 0
+        avgtime = 0
+        avgiorate = 0
+     end if
 
-        if (rank == 0) then
-           write(*,*) 'Writing to ', filename
-           mintime = 0
-           maxiorate = 0
-           avgtime = 0
-           avgiorate = 0
-        end if
+     do irep = 1, numrep
+       call MPI_Barrier(comm, ierr)
+       if (rank == 0) then
+         t0 = benchtime()
+       end if
 
-        do irep = 1, numrep
-          call MPI_Barrier(comm, ierr)
-          if (rank == 0) then
-            t0 = benchtime()
+       select case (iolayer)
+
+       case(1)
+          call serialwrite(filename, iodata, n1, n2, n3, cartcomm)
+
+       case(2)
+          call mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
+
+       case(3)
+          call hdf5write(filename, iodata, n1, n2, n3, cartcomm)
+
+       case(4)
+          call netcdfwrite(filename, iodata, n1, n2, n3, cartcomm)
+
+       case default
+          write(*,*) 'Illegal value of iolayer = ', iolayer
+          stop
+
+       end select
+
+       call MPI_Barrier(comm, ierr)
+       if (rank == 0) then
+          t1 = benchtime()
+
+          time = t1 - t0
+          iorate = mibdata/time
+          avgtime = avgtime + time/numrep
+          avgiorate = avgiorate + iorate/numrep
+
+          if (maxiorate < iorate) then
+            maxiorate = iorate
+            mintime = time
           end if
 
-          select case (iolayer)
-
-          case(1)
-             call serialwrite(filename, iodata, n1, n2, n3, cartcomm)
-
-          case(2)
-             call mpiiowrite(filename, iodata, n1, n2, n3, cartcomm)
-
-          case(3)
-             call hdf5write(filename, iodata, n1, n2, n3, cartcomm)
-
-          case(4)
-             call netcdfwrite(filename, iodata, n1, n2, n3, cartcomm)
-
-          case default
-             write(*,*) 'Illegal value of iolayer = ', iolayer
-             stop
-
-          end select
-
-          call MPI_Barrier(comm, ierr)
-          if (rank == 0) then
-             t1 = benchtime()
-
-             time = t1 - t0
-             iorate = mibdata/time
-             avgtime = avgtime + time/numrep
-             avgiorate = avgiorate + iorate/numrep
-
-             if (maxiorate < iorate) then
-               maxiorate = iorate
-               mintime = time
-             end if
-
-             write(*,*) 'time = ', time, ', rate = ', iorate, ' MiB/s'
-             call fdelete(filename)
-          end if
-        end do
-        if (rank == 0) then
-          write(*,*) 'mintime = ', mintime, ', maxrate = ', maxiorate, ' MiB/s'
-          write(*,*) 'avgtime = ', avgtime, ', avgrate = ', avgiorate, ' MiB/s'
-          write(*,*) 'Deleting: ', filename
-          write(*,*)
-        end if
+          write(*,*) 'time = ', time, ', rate = ', iorate, ' MiB/s'
+          call fdelete(filename)
+       end if
      end do
+     if (rank == 0) then
+       write(*,*) 'mintime = ', mintime, ', maxrate = ', maxiorate, ' MiB/s'
+       write(*,*) 'avgtime = ', avgtime, ', avgrate = ', avgiorate, ' MiB/s'
+       write(*,*) 'Deleting: ', filename
+       write(*,*)
+     end if
   end do
 
   if (rank == 0) then
