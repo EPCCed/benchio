@@ -9,12 +9,6 @@ cases, due to variations in I/O performance from user contention.
 Data layout is 3D strided - intended to more closely resemble that of a real
 world application than 2D sequential. By default, array size is 256x256x256.
 
-Intended for use on Lustre filesystems and tests the system default stripe
-level, the maximum supported stripe level, and single-stripe/unstriped I/O.
-
-Will run on non-Lustre filesystems (e.g. GPFS) but will not test any filesystem
-specific features.
-
 Supports POSIX (serial), MPI-IO, HDF5 and NetCDF backends. A run will test all
 backends included at compile time.
 
@@ -45,25 +39,21 @@ support.
 
 # Running
 
-`mkdir -p defstriped`
+For example, to test performance with maximum striping on Lustre:
 
-`mkdir -p striped`
+`mkdir -p benchio_files`
 
-`mkdir -p unstriped`
-
-`lfs setstripe -c -1 striped`
-
-`lfs setstripe -c 1 unstriped`
+`lfs setstripe -c -1 benchio_files`
 
 `aprun -n <NUMBER_OF_PROCESSORS> ./benchio.x`
 
 Explanation of commands follows:
 
-The application expects a working directory with subdirectories `defstriped`,
-`striped` and `unstriped`. An I/O error will be thrown if these are not present.
+The application expects a working directory with subdirectory `benchio_files`.
+An I/O error will be thrown if this subdirectory is not present.
 
-Under Lustre, the appropriate striping patterns should be set on these
-directories using the `lfs setstripe` command.
+Under Lustre, the appropriate striping patterns should be set on this
+subdirectory using the `lfs setstripe` command.
 
 The `benchio.x` executable should be launched with the platform job launcher,
 e.g. `aprun` or `mpirun`. Results are written to STDOUT.
