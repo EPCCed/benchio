@@ -1,0 +1,17 @@
+#!/bin/bash --login
+
+#PBS -l select=1
+#PBS -l walltime=0:20:00
+#PBS -N benchio
+#PBS -A z19-cse
+
+cd $PBS_O_WORKDIR
+mkdir -p defstriped
+mkdir -p striped
+mkdir -p unstriped
+lfs setstripe -c -1 striped
+lfs setstripe -c 1 unstriped
+
+# Run tests
+aprun -n 24 ./benchio.x
+
