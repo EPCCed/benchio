@@ -21,14 +21,14 @@ program benchio
 ! Set local array size - global sizes l1, l2 and l3 are scaled
 ! by number of processes in each dimension
 
-  integer, parameter :: n1 = 256
-  integer, parameter :: n2 = 256
-  integer, parameter :: n3 = 256
+  integer :: n1
+  integer :: n2
+  integer :: n3
   integer, parameter :: ndim = 3
 
   integer :: i1, i2, i3, j1, j2, j3, l1, l2, l3, p1, p2, p3
 
-  double precision :: iodata(0:n1+1, 0:n2+1, 0:n3+1)
+  double precision, allocatable :: iodata(:,:,:)
 
   integer :: rank, size, ierr, comm, cartcomm, dblesize
   integer, dimension(ndim) :: dims, coords
@@ -62,6 +62,7 @@ program benchio
   call MPI_Comm_rank(comm, rank, ierr)
 
   dims(:) = 0
+  dims(1) = 1
 
 ! Set 3D processor grid
 
@@ -75,9 +76,15 @@ program benchio
 
 ! Compute global sizes
 
-  l1 = p1*n1
-  l2 = p2*n2
-  l3 = p3*n3
+  l1 = 512
+  l2 = 512
+  l3 = 512
+
+  n1 = l1 / p1
+  n2 = l2 / p2
+  n3 = l3 / p3
+
+  allocate(iodata(0:n1+1, 0:n2+1, 0:n3+1))
 
   call MPI_Type_size(MPI_DOUBLE_PRECISION, dblesize, ierr)
 
@@ -228,6 +235,8 @@ program benchio
      write(*,*) '--------'
      write(*,*)
   end if
+  
+  deallocate(iodata)
 
   call MPI_Finalize(ierr)
   
