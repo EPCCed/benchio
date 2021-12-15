@@ -71,3 +71,12 @@ The array size (per MPI rank) is controlled through the following constants in
 
 `integer, parameter :: n3 = 256`
 
+# Fixed global size
+
+To make it easier to run fixed global problem sizes the `fixed-global-size`
+directory contains code that works with a constant global size with local
+sizes computed based on the MPI decomposition, it is otherwise identical
+to the code under `shared-file`.
+Note - the user is responsible for ensuring a given decomposition works,
+to simplify this the first dimension of the decomposition is set to 1,
+mimicing a "pencil" decomposition.
